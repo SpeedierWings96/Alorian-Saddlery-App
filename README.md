@@ -1,50 +1,156 @@
-# Welcome to your Expo app 👋
+# Alorian Saddlery Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A premium React Native e-commerce application for Alorian Saddlery, featuring a complete Shopify integration for selling equestrian equipment.
 
-## Get started
+## Features
 
-1. Install dependencies
+### 🛍️ E-commerce Functionality
+- **Product Catalog**: Browse all products with beautiful card layouts
+- **Product Details**: Rich product pages with image galleries, variants, and descriptions
+- **Search**: Full-text search across all products
+- **Collections**: Organized product categories
+- **Shopping Cart**: Add, remove, and update quantities
+- **Checkout**: Seamless Shopify checkout integration
 
+### 🎨 User Experience
+- **Native Navigation**: React Navigation with tab and stack navigators
+- **Beautiful UI**: Professional design with gradients and animations
+- **Responsive Design**: Optimized for all device sizes
+- **Loading States**: Smooth loading spinners and refresh controls
+- **Error Handling**: Graceful error handling throughout the app
+
+### ⚡ Technical Features
+- **Shopify GraphQL API**: Complete integration with Shopify Storefront API
+- **State Management**: React Context for cart state
+- **Persistent Storage**: AsyncStorage for cart persistence
+- **TypeScript Support**: Partial TypeScript implementation
+- **Modern React**: Hooks-based architecture
+
+## App Structure
+
+### Navigation
+- **Home Tab**: Featured products, collections, search
+- **Products Tab**: All products with pagination
+- **Cart Tab**: Shopping cart with checkout
+- **Profile Tab**: Company information and links
+
+### Key Screens
+- `HomeScreen`: Hero banner, collections, featured products
+- `ProductsScreen`: Product grid with infinite scroll
+- `ProductDetailScreen`: Product images, variants, add to cart
+- `CartScreen`: Cart items, quantity management, checkout
+- `SearchScreen`: Product search functionality
+- `CollectionsScreen`: Category browsing
+- `ProfileScreen`: Company information and support
+
+## Technical Stack
+
+- **Framework**: React Native with Expo
+- **Navigation**: React Navigation v7
+- **State Management**: React Context
+- **API**: Shopify GraphQL Storefront API
+- **HTTP Client**: Axios
+- **UI Components**: Custom components with Expo Vector Icons
+- **Storage**: AsyncStorage
+- **Styling**: React Native StyleSheet
+
+## Setup Instructions
+
+1. **Install Dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
+2. **Configure Shopify**
+   - Update `config/shopify.js` with your Shopify store details:
+     - Domain: Your Shopify store domain
+     - Storefront Access Token: Your Shopify Storefront API token
+     - API Version: Latest supported version
 
+3. **Start Development Server**
    ```bash
-   npx expo start
+   npm start
    ```
 
-In the output, you'll find options to open the app in a
+4. **Run on Device**
+   - Scan QR code with Expo Go app (iOS/Android)
+   - Or use `npm run ios` / `npm run android` for simulators
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Configuration
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Shopify Setup
+The app connects to Shopify via the Storefront API. Configure your store in `config/shopify.js`:
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```javascript
+export const SHOPIFY_CONFIG = {
+  domain: 'your-store.myshopify.com',
+  storefrontAccessToken: 'your-storefront-access-token',
+  apiVersion: '2024-01',
+};
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Required Shopify Permissions
+Ensure your Storefront Access Token has these permissions:
+- Read products
+- Read collections
+- Read product listings
+- Manage carts
 
-## Learn more
+## App Components
 
-To learn more about developing your project with Expo, look at the following resources:
+### Core Components
+- `ProductCard`: Product display component
+- `CartIcon`: Cart icon with item count badge
+- `LoadingSpinner`: Loading state component
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Services
+- `shopifyService`: Complete Shopify API integration
+- GraphQL queries for products, collections, cart operations
 
-## Join the community
+### Context
+- `CartContext`: Global cart state management
 
-Join our community of developers creating universal apps.
+## Features in Detail
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Product Management
+- **Product Loading**: Paginated product fetching
+- **Image Gallery**: Multiple product images with indicators
+- **Variant Selection**: Size, color, and other option selection
+- **Stock Status**: Real-time availability checking
+
+### Cart Functionality
+- **Add to Cart**: Product variant selection and cart addition
+- **Quantity Management**: Increase/decrease item quantities
+- **Remove Items**: Individual item removal
+- **Persistence**: Cart state persists between app sessions
+- **Checkout**: Direct integration with Shopify checkout
+
+### Search & Navigation
+- **Search**: Real-time product search
+- **Collections**: Category-based browsing
+- **Navigation**: Seamless navigation between screens
+- **Deep Linking**: Support for product deep links
+
+## Build & Deployment
+
+### Development Build
+```bash
+expo build:android
+expo build:ios
+```
+
+### Production Build
+```bash
+eas build --platform android
+eas build --platform ios
+```
+
+## Support
+
+For technical support or questions about the app:
+- Email: support@alorian.com
+- Website: https://alorian.com
+
+## License
+
+© 2024 Alorian Saddlery. All rights reserved.
