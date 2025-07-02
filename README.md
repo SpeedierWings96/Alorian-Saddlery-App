@@ -1,156 +1,78 @@
-# Alorian Saddlery Mobile App
+# Alorian Saddlery - Expo Mobile App
 
-A premium React Native e-commerce application for Alorian Saddlery, featuring a complete Shopify integration for selling equestrian equipment.
+A mobile e-commerce app for Alorian Saddlery built with React Native, Expo, and Shopify Storefront API.
 
 ## Features
 
-### 🛍️ E-commerce Functionality
-- **Product Catalog**: Browse all products with beautiful card layouts
-- **Product Details**: Rich product pages with image galleries, variants, and descriptions
-- **Search**: Full-text search across all products
-- **Collections**: Organized product categories
-- **Shopping Cart**: Add, remove, and update quantities
-- **Checkout**: Seamless Shopify checkout integration
+- Browse products and collections
+- View detailed product information with image galleries
+- Add products to cart with variant selection
+- Shopping cart management
+- Direct checkout via Shopify
+- Beautiful UI with brand colors matching the Alorian Saddlery logo
 
-### 🎨 User Experience
-- **Native Navigation**: React Navigation with tab and stack navigators
-- **Beautiful UI**: Professional design with gradients and animations
-- **Responsive Design**: Optimized for all device sizes
-- **Loading States**: Smooth loading spinners and refresh controls
-- **Error Handling**: Graceful error handling throughout the app
+## Prerequisites
 
-### ⚡ Technical Features
-- **Shopify GraphQL API**: Complete integration with Shopify Storefront API
-- **State Management**: React Context for cart state
-- **Persistent Storage**: AsyncStorage for cart persistence
-- **TypeScript Support**: Partial TypeScript implementation
-- **Modern React**: Hooks-based architecture
+- Node.js (v14 or higher)
+- npm or yarn
+- Expo Go app on your mobile device (iOS or Android)
 
-## App Structure
+## Installation
 
-### Navigation
-- **Home Tab**: Featured products, collections, search
-- **Products Tab**: All products with pagination
-- **Cart Tab**: Shopping cart with checkout
-- **Profile Tab**: Company information and links
-
-### Key Screens
-- `HomeScreen`: Hero banner, collections, featured products
-- `ProductsScreen`: Product grid with infinite scroll
-- `ProductDetailScreen`: Product images, variants, add to cart
-- `CartScreen`: Cart items, quantity management, checkout
-- `SearchScreen`: Product search functionality
-- `CollectionsScreen`: Category browsing
-- `ProfileScreen`: Company information and support
-
-## Technical Stack
-
-- **Framework**: React Native with Expo
-- **Navigation**: React Navigation v7
-- **State Management**: React Context
-- **API**: Shopify GraphQL Storefront API
-- **HTTP Client**: Axios
-- **UI Components**: Custom components with Expo Vector Icons
-- **Storage**: AsyncStorage
-- **Styling**: React Native StyleSheet
-
-## Setup Instructions
-
-1. **Install Dependencies**
-   ```bash
-   npm install
-   ```
-
-2. **Configure Shopify**
-   - Update `config/shopify.js` with your Shopify store details:
-     - Domain: Your Shopify store domain
-     - Storefront Access Token: Your Shopify Storefront API token
-     - API Version: Latest supported version
-
-3. **Start Development Server**
-   ```bash
-   npm start
-   ```
-
-4. **Run on Device**
-   - Scan QR code with Expo Go app (iOS/Android)
-   - Or use `npm run ios` / `npm run android` for simulators
-
-## Configuration
-
-### Shopify Setup
-The app connects to Shopify via the Storefront API. Configure your store in `config/shopify.js`:
-
-```javascript
-export const SHOPIFY_CONFIG = {
-  domain: 'your-store.myshopify.com',
-  storefrontAccessToken: 'your-storefront-access-token',
-  apiVersion: '2024-01',
-};
-```
-
-### Required Shopify Permissions
-Ensure your Storefront Access Token has these permissions:
-- Read products
-- Read collections
-- Read product listings
-- Manage carts
-
-## App Components
-
-### Core Components
-- `ProductCard`: Product display component
-- `CartIcon`: Cart icon with item count badge
-- `LoadingSpinner`: Loading state component
-
-### Services
-- `shopifyService`: Complete Shopify API integration
-- GraphQL queries for products, collections, cart operations
-
-### Context
-- `CartContext`: Global cart state management
-
-## Features in Detail
-
-### Product Management
-- **Product Loading**: Paginated product fetching
-- **Image Gallery**: Multiple product images with indicators
-- **Variant Selection**: Size, color, and other option selection
-- **Stock Status**: Real-time availability checking
-
-### Cart Functionality
-- **Add to Cart**: Product variant selection and cart addition
-- **Quantity Management**: Increase/decrease item quantities
-- **Remove Items**: Individual item removal
-- **Persistence**: Cart state persists between app sessions
-- **Checkout**: Direct integration with Shopify checkout
-
-### Search & Navigation
-- **Search**: Real-time product search
-- **Collections**: Category-based browsing
-- **Navigation**: Seamless navigation between screens
-- **Deep Linking**: Support for product deep links
-
-## Build & Deployment
-
-### Development Build
+1. Clone the repository:
 ```bash
-expo build:android
-expo build:ios
+git clone https://github.com/your-repo/alorian-saddlery.git
+cd alorian-saddlery
 ```
 
-### Production Build
+2. Install dependencies:
 ```bash
-eas build --platform android
-eas build --platform ios
+npm install
 ```
 
-## Support
+## Running the App
 
-For technical support or questions about the app:
-- Email: support@alorian.com
-- Website: https://alorian.com
+1. Start the Expo development server:
+```bash
+npm start
+```
 
-## License
+2. Scan the QR code with:
+   - **iOS**: Camera app or Expo Go app
+   - **Android**: Expo Go app
 
-© 2024 Alorian Saddlery. All rights reserved.
+## Project Structure
+
+```
+alorian-saddlery/
+├── assets/              # Images and fonts
+├── components/          # Reusable components
+├── config/             # App configuration (Shopify)
+├── constants/          # Colors and theme constants
+├── context/            # React Context (Cart)
+├── screens/            # App screens
+├── services/           # API services
+├── App.js              # Main app component
+└── package.json        # Dependencies
+```
+
+## Brand Colors
+
+The app uses the official Alorian Saddlery brand colors:
+- Navy Blue (#1B2951) - Primary brand color
+- Gold (#C8963E) - Secondary accent color
+- Supporting colors for UI elements
+
+## Technologies
+
+- React Native & Expo
+- Shopify Storefront API
+- React Navigation
+- AsyncStorage for cart persistence
+
+## Notes
+
+- The app connects to the Alorian Saddlery Shopify store
+- Cart data is persisted locally
+- Checkout is handled through Shopify's secure checkout page
+- Design follows the brand motto: "More Than Tack, It's a Lifestyle" 

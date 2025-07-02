@@ -2,146 +2,111 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
+  StyleSheet,
   RefreshControl,
-  ActivityIndicator,
+  Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import ProductCard from '../components/ProductCard';
-import LoadingSpinner from '../components/LoadingSpinner';
-import shopifyService from '../services/shopify';
+import { Colors } from '../constants/Colors';
+import { shopifyService } from '../services/shopifyService';
+import { ProductCard } from '../components/ProductCard';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
-const ProductsScreen = ({ navigation }) => {
+const { width } = Dimensions.get('window');
+
+export const ProductsScreen = ({ navigation }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasNextPage, setHasNextPage] = useState(true);
-  const [endCursor, setEndCursor] = useState(null);
 
   useEffect(() => {
     loadProducts();
   }, []);
 
-  const loadProducts = async (isLoadMore = false) => {
-    if (!isLoadMore) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
-
+  const loadProducts = async () => {
     try {
-      const data = await shopifyService.getProducts(20, isLoadMore ? endCursor : null);
-      const newProducts = data.products.edges.map(edge => edge.node);
-      
-      if (isLoadMore) {
-        setProducts([...products, ...newProducts]);
-      } else {
-        setProducts(newProducts);
-      }
-      
-      setHasNextPage(data.products.pageInfo.hasNextPage);
-      setEndCursor(data.products.pageInfo.endCursor);
+      const productsData = await shopifyService.getProducts(50);
+      setProducts(productsData);
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
-      setLoadingMore(false);
     }
   };
 
-  const handleRefresh = () => {
+  const onRefresh = () => {
     setRefreshing(true);
-    setEndCursor(null);
     loadProducts();
   };
 
-  const handleLoadMore = () => {
-    if (!loadingMore && hasNextPage) {
-      loadProducts(true);
-    }
-  };
-
-  const renderFooter = () => {
-    if (!loadingMore) return null;
-    
+  const renderProduct = ({ item, index }) => {
+    const isLeftColumn = index % 2 === 0;
     return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#8B4513" />
+      <View style={[styles.productWrapper, isLeftColumn && styles.leftProduct]}>
+        <ProductCard
+          product={item}
+          onPress={() => navigation.navigate('ProductDetail', { handle: item.handle })}
+        />
       </View>
     );
   };
 
-  if (loading && products.length === 0) {
+  if (loading) {
     return <LoadingSpinner />;
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <FlatList
         data={products}
+        renderItem={renderProduct}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ProductCard
-            product={item}
-            onPress={() => navigation.navigate('ProductDetail', { 
-              handle: item.handle,
-              title: item.title 
-            })}
-          />
-        )}
         numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.productList}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#8B4513']}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
           />
         }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No products found</Text>
+            <Text style={styles.emptyText}>No products available</Text>
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
-  row: {
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-  },
-  productList: {
+  listContent: {
+    paddingHorizontal: 8,
     paddingTop: 16,
-    paddingBottom: 20,
+    paddingBottom: 32,
   },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: 'center',
+  productWrapper: {
+    width: (width - 32) / 2,
+    paddingHorizontal: 8,
+  },
+  leftProduct: {
+    paddingRight: 4,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 50,
+    paddingTop: 100,
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.text.secondary,
   },
-});
-
-export default ProductsScreen;
+}); 

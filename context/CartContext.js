@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import shopifyService from '../services/shopify';
+import { shopifyService } from '../services/shopifyService';
 
 const CartContext = createContext();
 
@@ -15,113 +15,88 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [cartId, setCartId] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
 
+  // Load cart from storage on mount
   useEffect(() => {
     loadCart();
   }, []);
 
+  // Update cart count when cart changes
+  useEffect(() => {
+    if (cart) {
+      setCartCount(cart.totalQuantity || 0);
+    }
+  }, [cart]);
+
   const loadCart = async () => {
     try {
-      const storedCartId = await AsyncStorage.getItem('cartId');
-      if (storedCartId) {
-        const cartData = await shopifyService.getCart(storedCartId);
-        if (cartData.cart) {
-          setCart(cartData.cart);
-          setCartId(storedCartId);
-        } else {
-          await createNewCart();
-        }
-      } else {
-        await createNewCart();
+      const savedCartId = await AsyncStorage.getItem('cartId');
+      if (savedCartId) {
+        // In a real app, you'd fetch the cart details here
+        // For now, we'll just store the ID
+        setCart({ id: savedCartId });
       }
     } catch (error) {
       console.error('Error loading cart:', error);
-      await createNewCart();
     }
   };
 
   const createNewCart = async () => {
     try {
-      const result = await shopifyService.createCart();
-      const newCart = result.cartCreate.cart;
-      setCart(newCart);
-      setCartId(newCart.id);
+      setLoading(true);
+      const newCart = await shopifyService.createCart();
       await AsyncStorage.setItem('cartId', newCart.id);
+      setCart(newCart);
+      return newCart;
     } catch (error) {
       console.error('Error creating cart:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const addToCart = async (variantId, quantity = 1) => {
-    if (!cartId) {
-      await createNewCart();
-    }
-    
-    setLoading(true);
     try {
-      const result = await shopifyService.addToCart(cartId, variantId, quantity);
-      setCart(result.cartLinesAdd.cart);
-      return true;
+      setLoading(true);
+      let currentCart = cart;
+      
+      // Create cart if it doesn't exist
+      if (!currentCart) {
+        currentCart = await createNewCart();
+      }
+      
+      // Add item to cart
+      const updatedCart = await shopifyService.addToCart(currentCart.id, variantId, quantity);
+      setCart(updatedCart);
+      return updatedCart;
     } catch (error) {
       console.error('Error adding to cart:', error);
-      return false;
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateQuantity = async (lineId, quantity) => {
-    setLoading(true);
+  const clearCart = async () => {
     try {
-      const result = await shopifyService.updateCartLine(cartId, lineId, quantity);
-      setCart(result.cartLinesUpdate.cart);
+      await AsyncStorage.removeItem('cartId');
+      setCart(null);
+      setCartCount(0);
     } catch (error) {
-      console.error('Error updating quantity:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error clearing cart:', error);
     }
   };
 
-  const removeFromCart = async (lineId) => {
-    setLoading(true);
-    try {
-      const result = await shopifyService.removeFromCart(cartId, lineId);
-      setCart(result.cartLinesRemove.cart);
-    } catch (error) {
-      console.error('Error removing from cart:', error);
-    } finally {
-      setLoading(false);
-    }
+  const value = {
+    cart,
+    cartCount,
+    loading,
+    addToCart,
+    clearCart,
+    createNewCart,
   };
 
-  const getCartCount = () => {
-    return cart?.totalQuantity || 0;
-  };
-
-  const getCartTotal = () => {
-    return cart?.cost?.totalAmount || { amount: '0', currencyCode: 'USD' };
-  };
-
-  const getCheckoutUrl = () => {
-    return cart?.checkoutUrl || '';
-  };
-
-  return (
-    <CartContext.Provider
-      value={{
-        cart,
-        loading,
-        addToCart,
-        updateQuantity,
-        removeFromCart,
-        getCartCount,
-        getCartTotal,
-        getCheckoutUrl,
-        refreshCart: loadCart,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
-};
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+}; 

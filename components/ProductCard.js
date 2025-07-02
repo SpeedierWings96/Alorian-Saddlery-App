@@ -1,21 +1,18 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { Colors } from '../constants/Colors';
 
-const { width } = Dimensions.get('window');
-const cardWidth = (width - 48) / 2;
-
-const ProductCard = ({ product, onPress }) => {
-  const price = product.priceRange?.minVariantPrice?.amount || '0';
-  const currencyCode = product.priceRange?.minVariantPrice?.currencyCode || 'USD';
-  const imageUrl = product.images?.edges[0]?.node?.originalSrc || null;
+export const ProductCard = ({ product, onPress }) => {
+  const price = product?.priceRange?.minVariantPrice?.amount || '0';
+  const currencyCode = product?.priceRange?.minVariantPrice?.currencyCode || 'USD';
+  const imageUrl = product?.images?.edges?.[0]?.node?.url;
+  const imageAlt = product?.images?.edges?.[0]?.node?.altText || product.title;
 
   const formatPrice = (amount, currency) => {
-    const formatter = new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,
-    });
-    return formatter.format(parseFloat(amount));
+    }).format(parseFloat(amount));
   };
 
   return (
@@ -24,15 +21,17 @@ const ProductCard = ({ product, onPress }) => {
         {imageUrl ? (
           <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
         ) : (
-          <LinearGradient
-            colors={['#8B4513', '#D2691E']}
-            style={styles.placeholderImage}
-          >
-            <Text style={styles.placeholderText}>Alorian</Text>
-          </LinearGradient>
+          <View style={styles.placeholderImage}>
+            <Text style={styles.placeholderText}>No Image</Text>
+          </View>
+        )}
+        {!product.availableForSale && (
+          <View style={styles.soldOutBadge}>
+            <Text style={styles.soldOutText}>Sold Out</Text>
+          </View>
         )}
       </View>
-      <View style={styles.infoContainer}>
+      <View style={styles.content}>
         <Text style={styles.title} numberOfLines={2}>
           {product.title}
         </Text>
@@ -44,25 +43,20 @@ const ProductCard = ({ product, onPress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: cardWidth,
-    marginBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   imageContainer: {
-    width: '100%',
-    height: cardWidth,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    overflow: 'hidden',
+    position: 'relative',
+    aspectRatio: 1,
+    backgroundColor: Colors.accent,
   },
   image: {
     width: '100%',
@@ -73,26 +67,38 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.accent,
   },
   placeholderText: {
-    color: '#fff',
-    fontSize: 18,
+    color: Colors.text.secondary,
+    fontSize: 14,
+  },
+  soldOutBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  soldOutText: {
+    color: Colors.text.light,
+    fontSize: 12,
     fontWeight: 'bold',
   },
-  infoContainer: {
+  content: {
     padding: 12,
   },
   title: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.text.primary,
     marginBottom: 4,
   },
   price: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: Colors.primary,
   },
-});
-
-export default ProductCard;
+}); 

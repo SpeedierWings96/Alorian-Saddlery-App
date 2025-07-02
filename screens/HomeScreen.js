@@ -2,30 +2,26 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  FlatList,
-  RefreshControl,
-  TextInput,
-  TouchableOpacity,
   ScrollView,
+  StyleSheet,
+  RefreshControl,
+  TouchableOpacity,
+  FlatList,
   Image,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import ProductCard from '../components/ProductCard';
-import LoadingSpinner from '../components/LoadingSpinner';
-import shopifyService from '../services/shopify';
+import { Colors } from '../constants/Colors';
+import { shopifyService } from '../services/shopifyService';
+import { ProductCard } from '../components/ProductCard';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 const { width } = Dimensions.get('window');
 
-const HomeScreen = ({ navigation }) => {
+export const HomeScreen = ({ navigation }) => {
   const [products, setProducts] = useState([]);
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadData();
@@ -34,12 +30,11 @@ const HomeScreen = ({ navigation }) => {
   const loadData = async () => {
     try {
       const [productsData, collectionsData] = await Promise.all([
-        shopifyService.getProducts(10),
-        shopifyService.getCollections(),
+        shopifyService.getProducts(6),
+        shopifyService.getCollections(5),
       ]);
-      
-      setProducts(productsData.products.edges.map(edge => edge.node));
-      setCollections(collectionsData.collections.edges.map(edge => edge.node));
+      setProducts(productsData);
+      setCollections(collectionsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -48,98 +43,23 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleRefresh = () => {
+  const onRefresh = () => {
     setRefreshing(true);
     loadData();
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    
-    navigation.navigate('Search', { query: searchQuery });
-  };
-
-  const renderHeader = () => (
-    <View>
-      {/* Hero Banner */}
-      <LinearGradient
-        colors={['#8B4513', '#D2691E']}
-        style={styles.heroBanner}
-      >
-        <Text style={styles.heroTitle}>Alorian Saddlery</Text>
-        <Text style={styles.heroSubtitle}>Premium Equestrian Equipment</Text>
-      </LinearGradient>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search products..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color="#666" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Collections */}
-      {collections.length > 0 && (
-        <View style={styles.sectionsContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Shop by Category</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Collections')}>
-              <Text style={styles.viewAll}>View All</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.collectionsScroll}
-          >
-            {collections.map((collection) => (
-              <TouchableOpacity
-                key={collection.id}
-                style={styles.collectionCard}
-                onPress={() => navigation.navigate('Collection', { 
-                  handle: collection.handle,
-                  title: collection.title 
-                })}
-              >
-                {collection.image ? (
-                  <Image
-                    source={{ uri: collection.image.originalSrc }}
-                    style={styles.collectionImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <LinearGradient
-                    colors={['#D2691E', '#8B4513']}
-                    style={styles.collectionImage}
-                  />
-                )}
-                <Text style={styles.collectionTitle}>{collection.title}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+  const renderCollectionItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.collectionItem}
+      onPress={() => navigation.navigate('Collection', { handle: item.handle, title: item.title })}
+    >
+      {item.image?.url ? (
+        <Image source={{ uri: item.image.url }} style={styles.collectionImage} />
+      ) : (
+        <View style={[styles.collectionImage, styles.collectionPlaceholder]} />
       )}
-
-      {/* Featured Products Header */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Featured Products</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Products')}>
-          <Text style={styles.viewAll}>View All</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      <Text style={styles.collectionTitle}>{item.title}</Text>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -147,129 +67,153 @@ const HomeScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ProductCard
-            product={item}
-            onPress={() => navigation.navigate('ProductDetail', { 
-              handle: item.handle,
-              title: item.title 
-            })}
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
+      }
+    >
+      {/* Hero Section */}
+      <View style={styles.hero}>
+        <Text style={styles.heroTitle}>ALORIAN</Text>
+        <Text style={styles.heroSubtitle}>SADDLERY</Text>
+        <View style={styles.divider} />
+        <Text style={styles.heroTagline}>More Than Tack, It's a Lifestyle</Text>
+      </View>
+
+      {/* Collections */}
+      {collections.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Collections</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Collections')}>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            horizontal
+            data={collections}
+            renderItem={renderCollectionItem}
+            keyExtractor={(item) => item.id}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.collectionsContainer}
           />
-        )}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        ListHeaderComponent={renderHeader}
-        contentContainerStyle={styles.productList}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#8B4513']}
-          />
-        }
-      />
-    </SafeAreaView>
+        </View>
+      )}
+
+      {/* Featured Products */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Featured Products</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Products')}>
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.productsGrid}>
+          {products.map((product) => (
+            <View key={product.id} style={styles.productWrapper}>
+              <ProductCard
+                product={product}
+                onPress={() =>
+                  navigation.navigate('ProductDetail', { handle: product.handle })
+                }
+              />
+            </View>
+          ))}
+        </View>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
-  heroBanner: {
-    height: 200,
-    justifyContent: 'center',
+  hero: {
+    backgroundColor: Colors.primary,
+    padding: 32,
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
   heroTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
+    fontSize: 36,
+    fontWeight: '900',
+    color: Colors.text.light,
+    letterSpacing: 2,
   },
   heroSubtitle: {
-    fontSize: 16,
-    color: '#fff',
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.gold,
+    letterSpacing: 3,
+    marginTop: -4,
+  },
+  divider: {
+    width: 60,
+    height: 3,
+    backgroundColor: Colors.gold,
+    marginVertical: 16,
+  },
+  heroTagline: {
+    fontSize: 14,
+    color: Colors.text.light,
+    letterSpacing: 0.5,
     opacity: 0.9,
   },
-  searchContainer: {
-    padding: 16,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#333',
-  },
-  sectionsContainer: {
-    marginBottom: 16,
+  section: {
+    marginTop: 24,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.text.primary,
   },
-  viewAll: {
+  viewAllText: {
     fontSize: 14,
-    color: '#8B4513',
+    color: Colors.secondary,
     fontWeight: '600',
   },
-  collectionsScroll: {
+  collectionsContainer: {
     paddingHorizontal: 16,
   },
-  collectionCard: {
-    marginRight: 12,
+  collectionItem: {
+    marginRight: 16,
     alignItems: 'center',
   },
   collectionImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     marginBottom: 8,
+    borderWidth: 3,
+    borderColor: Colors.gold,
+  },
+  collectionPlaceholder: {
+    backgroundColor: Colors.accent,
   },
   collectionTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.text.primary,
     textAlign: 'center',
-    maxWidth: 100,
+    maxWidth: 120,
   },
-  row: {
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
+  productsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 8,
   },
-  productList: {
-    paddingBottom: 20,
+  productWrapper: {
+    width: (width - 32) / 2,
+    paddingHorizontal: 8,
   },
-});
-
-export default HomeScreen;
+}); 

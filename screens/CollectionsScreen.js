@@ -2,18 +2,17 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
+  StyleSheet,
   TouchableOpacity,
   Image,
   RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import LoadingSpinner from '../components/LoadingSpinner';
-import shopifyService from '../services/shopify';
+import { Colors } from '../constants/Colors';
+import { shopifyService } from '../services/shopifyService';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
-const CollectionsScreen = ({ navigation }) => {
+export const CollectionsScreen = ({ navigation }) => {
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -24,8 +23,8 @@ const CollectionsScreen = ({ navigation }) => {
 
   const loadCollections = async () => {
     try {
-      const data = await shopifyService.getCollections();
-      setCollections(data.collections.edges.map(edge => edge.node));
+      const collectionsData = await shopifyService.getCollections(20);
+      setCollections(collectionsData);
     } catch (error) {
       console.error('Error loading collections:', error);
     } finally {
@@ -34,7 +33,7 @@ const CollectionsScreen = ({ navigation }) => {
     }
   };
 
-  const handleRefresh = () => {
+  const onRefresh = () => {
     setRefreshing(true);
     loadCollections();
   };
@@ -43,36 +42,23 @@ const CollectionsScreen = ({ navigation }) => {
     <TouchableOpacity
       style={styles.collectionCard}
       onPress={() => navigation.navigate('Collection', { 
-        handle: item.handle,
+        handle: item.handle, 
         title: item.title 
       })}
-      activeOpacity={0.9}
     >
-      {item.image ? (
-        <Image
-          source={{ uri: item.image.originalSrc }}
-          style={styles.collectionImage}
-          resizeMode="cover"
-        />
+      {item.image?.url ? (
+        <Image source={{ uri: item.image.url }} style={styles.collectionImage} />
       ) : (
-        <LinearGradient
-          colors={['#8B4513', '#D2691E']}
-          style={styles.collectionImage}
-        >
-          <Text style={styles.placeholderText}>Alorian</Text>
-        </LinearGradient>
+        <View style={[styles.collectionImage, styles.placeholderImage]} />
       )}
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.8)']}
-        style={styles.overlay}
-      >
+      <View style={styles.overlay}>
         <Text style={styles.collectionTitle}>{item.title}</Text>
         {item.description && (
           <Text style={styles.collectionDescription} numberOfLines={2}>
             {item.description}
           </Text>
         )}
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 
@@ -81,47 +67,44 @@ const CollectionsScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <FlatList
         data={collections}
-        keyExtractor={(item) => item.id}
         renderItem={renderCollection}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#8B4513']}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No collections found</Text>
+            <Text style={styles.emptyText}>No collections available</Text>
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   listContent: {
-    paddingVertical: 16,
+    padding: 16,
   },
   collectionCard: {
-    marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -129,43 +112,36 @@ const styles = StyleSheet.create({
   collectionImage: {
     width: '100%',
     height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  placeholderText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
+  placeholderImage: {
+    backgroundColor: Colors.accent,
   },
   overlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 20,
-    paddingTop: 60,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 16,
   },
   collectionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.text.light,
     marginBottom: 4,
   },
   collectionDescription: {
     fontSize: 14,
-    color: '#fff',
-    opacity: 0.9,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 50,
+    paddingTop: 100,
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.text.secondary,
   },
-});
-
-export default CollectionsScreen;
+}); 

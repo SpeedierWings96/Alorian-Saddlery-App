@@ -1,168 +1,167 @@
-import { Ionicons } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
-import CartIcon from './components/CartIcon';
-import { CartProvider } from './context/CartContext';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { View, Text } from 'react-native';
 
 // Import screens
-import CartScreen from './screens/CartScreen';
-import CollectionScreen from './screens/CollectionScreen';
-import CollectionsScreen from './screens/CollectionsScreen';
-import HomeScreen from './screens/HomeScreen';
-import InfoScreen from './screens/InfoScreen';
-import ProductDetailScreen from './screens/ProductDetailScreen';
-import ProductsScreen from './screens/ProductsScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import SearchScreen from './screens/SearchScreen';
+import { HomeScreen } from './screens/HomeScreen';
+import { ProductsScreen } from './screens/ProductsScreen';
+import { ProductDetailScreen } from './screens/ProductDetailScreen';
+import { CartScreen } from './screens/CartScreen';
+import { CollectionsScreen } from './screens/CollectionsScreen';
+import { CollectionScreen } from './screens/CollectionScreen';
+
+// Import context
+import { CartProvider, useCart } from './context/CartContext';
+import { Colors } from './constants/Colors';
 
 const Tab = createBottomTabNavigator();
-const HomeStack = createStackNavigator();
-const ProductsStack = createStackNavigator();
-const CartStack = createStackNavigator();
-const ProfileStack = createStackNavigator();
+const Stack = createStackNavigator();
 
-// Stack navigators for each tab
-function HomeStackScreen() {
+// Cart badge component
+const CartBadge = () => {
+  const { cartCount } = useCart();
+  
+  if (cartCount === 0) return null;
+  
   return (
-    <HomeStack.Navigator
+    <View style={{
+      position: 'absolute',
+      right: -6,
+      top: -3,
+      backgroundColor: Colors.brass,
+      borderRadius: 10,
+      width: 20,
+      height: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>
+        {cartCount > 99 ? '99+' : cartCount}
+      </Text>
+    </View>
+  );
+};
+
+// Main tab navigator
+function MainTabs() {
+  return (
+    <Tab.Navigator
       screenOptions={{
-        headerStyle: {
-          backgroundColor: '#8B4513',
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.text.secondary,
+        tabBarStyle: {
+          backgroundColor: Colors.surface,
+          borderTopColor: Colors.border,
+          borderTopWidth: 1,
         },
-        headerTintColor: '#fff',
+        headerStyle: {
+          backgroundColor: Colors.primary,
+        },
+        headerTintColor: Colors.text.light,
         headerTitleStyle: {
           fontWeight: 'bold',
         },
       }}
     >
-      <HomeStack.Screen 
-        name="HomeMain" 
-        component={HomeScreen} 
-        options={{ title: 'Alorian Saddlery' }}
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
+          headerTitle: 'Alorian Saddlery',
+        }}
       />
-      <HomeStack.Screen 
-        name="ProductDetail" 
+      <Tab.Screen
+        name="Products"
+        component={ProductsScreen}
+        options={{
+          tabBarLabel: 'Products',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="grid-outline" size={size} color={color} />
+          ),
+          headerTitle: 'All Products',
+        }}
+      />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{
+          tabBarLabel: 'Cart',
+          tabBarIcon: ({ color, size }) => (
+            <View>
+              <Ionicons name="cart-outline" size={size} color={color} />
+              <CartBadge />
+            </View>
+          ),
+          headerTitle: 'Shopping Cart',
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// Root stack navigator
+function RootStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: Colors.primary,
+        },
+        headerTintColor: Colors.text.light,
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <Stack.Screen
+        name="MainTabs"
+        component={MainTabs}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ProductDetail"
         component={ProductDetailScreen}
-        options={({ route }) => ({ title: route.params.title })}
+        options={({ route }) => ({
+          title: 'Product Details',
+          headerBackTitle: 'Back',
+        })}
       />
-      <HomeStack.Screen name="Search" component={SearchScreen} />
-      <HomeStack.Screen name="Collections" component={CollectionsScreen} />
-      <HomeStack.Screen 
-        name="Collection" 
+      <Stack.Screen
+        name="Collections"
+        component={CollectionsScreen}
+        options={{
+          title: 'Collections',
+          headerBackTitle: 'Back',
+        }}
+      />
+      <Stack.Screen
+        name="Collection"
         component={CollectionScreen}
-        options={({ route }) => ({ title: route.params.title })}
+        options={({ route }) => ({
+          title: route.params?.title || 'Collection',
+          headerBackTitle: 'Back',
+        })}
       />
-    </HomeStack.Navigator>
-  );
-}
-
-function ProductsStackScreen() {
-  return (
-    <ProductsStack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#8B4513',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <ProductsStack.Screen name="ProductsMain" component={ProductsScreen} options={{ title: 'All Products' }} />
-      <ProductsStack.Screen 
-        name="ProductDetail" 
-        component={ProductDetailScreen}
-        options={({ route }) => ({ title: route.params.title })}
-      />
-    </ProductsStack.Navigator>
-  );
-}
-
-function CartStackScreen() {
-  return (
-    <CartStack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#8B4513',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <CartStack.Screen name="CartMain" component={CartScreen} options={{ title: 'Shopping Cart' }} />
-      <CartStack.Screen 
-        name="ProductDetail" 
-        component={ProductDetailScreen}
-        options={({ route }) => ({ title: route.params.title })}
-      />
-    </CartStack.Navigator>
-  );
-}
-
-function ProfileStackScreen() {
-  return (
-    <ProfileStack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#8B4513',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} options={{ title: 'Profile' }} />
-      <ProfileStack.Screen 
-        name="Info" 
-        component={InfoScreen}
-        options={({ route }) => ({ title: route.params.title })}
-      />
-    </ProfileStack.Navigator>
+    </Stack.Navigator>
   );
 }
 
 export default function App() {
   return (
-    <CartProvider>
-      <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName;
-
-              if (route.name === 'Home') {
-                iconName = focused ? 'home' : 'home-outline';
-              } else if (route.name === 'Products') {
-                iconName = focused ? 'grid' : 'grid-outline';
-              } else if (route.name === 'Cart') {
-                return <CartIcon color={color} size={size} />;
-              } else if (route.name === 'Profile') {
-                iconName = focused ? 'person' : 'person-outline';
-              }
-
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            tabBarActiveTintColor: '#8B4513',
-            tabBarInactiveTintColor: 'gray',
-            headerShown: false,
-            tabBarStyle: {
-              paddingBottom: 5,
-              height: 60,
-            },
-          })}
-        >
-          <Tab.Screen name="Home" component={HomeStackScreen} />
-          <Tab.Screen name="Products" component={ProductsStackScreen} />
-          <Tab.Screen name="Cart" component={CartStackScreen} />
-          <Tab.Screen name="Profile" component={ProfileStackScreen} />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </CartProvider>
+    <SafeAreaProvider>
+      <CartProvider>
+        <NavigationContainer>
+          <RootStack />
+        </NavigationContainer>
+      </CartProvider>
+    </SafeAreaProvider>
   );
-} 
+}
