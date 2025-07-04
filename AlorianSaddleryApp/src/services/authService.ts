@@ -31,39 +31,28 @@ class AuthService {
     try {
       logger.log('AuthService: Starting initialization...');
       
+      // Load stored data synchronously without network calls
       const storedToken = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
       const storedCustomer = await AsyncStorage.getItem(CUSTOMER_KEY);
       
       if (storedToken && storedCustomer) {
         this.accessToken = storedToken;
-        this.customer = JSON.parse(storedCustomer);
-        
-        // Only validate token if we have network - don't hang on network issues
         try {
-          const isValid = await Promise.race([
-            this.validateToken(),
-            new Promise<boolean>((_, reject) => 
-              setTimeout(() => reject(new Error('Token validation timeout')), 5000)
-            )
-          ]);
-          
-          if (!isValid) {
-            logger.log('AuthService: Token validation failed, clearing auth data');
-            await this.clearAuthData();
-          } else {
-            logger.log('AuthService: Token validation successful');
-          }
-        } catch (validationError) {
-          logger.log('AuthService: Token validation timed out or failed, keeping existing data');
-          // Keep existing data if validation fails due to network issues
+          this.customer = JSON.parse(storedCustomer);
+          logger.log('AuthService: Restored user session from storage');
+        } catch (parseError) {
+          logger.error('AuthService: Error parsing stored customer data', parseError);
+          await this.clearAuthData();
+          return;
         }
       }
       
-      logger.log('AuthService: Initialization completed');
+      logger.log('AuthService: Initialization completed successfully');
     } catch (error) {
       logger.error('AuthService: Error initializing auth:', error);
-      // Always clear auth data on initialization error to prevent white screen
-      await this.clearAuthData();
+      // Force clear memory state to prevent white screen
+      this.accessToken = null;
+      this.customer = null;
     }
   }
 

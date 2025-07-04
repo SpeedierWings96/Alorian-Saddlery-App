@@ -2,10 +2,10 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-// Add support for production builds
+// Ensure proper asset handling
 config.resolver.assetExts.push('db');
 
-// Fix source map and bundle generation for production
+// Optimize for production builds
 config.transformer = {
   ...config.transformer,
   minifierPath: 'metro-minify-terser',
@@ -19,4 +19,15 @@ config.transformer = {
   },
 };
 
-module.exports = config; 
+// Ensure proper source map generation
+config.serializer = {
+  ...config.serializer,
+  createModuleIdFactory: function () {
+    return function (path) {
+      // Use relative paths for module IDs to ensure consistency
+      return path.substr(path.lastIndexOf('/') + 1);
+    };
+  },
+};
+
+module.exports = config;

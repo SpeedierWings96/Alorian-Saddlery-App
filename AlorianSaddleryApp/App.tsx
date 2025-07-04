@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { LogBox, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { LogBox, View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { CartProvider } from './src/contexts/CartContext';
@@ -11,39 +12,58 @@ import { COLORS } from './src/config/theme';
 LogBox.ignoreLogs([
   'new NativeEventEmitter',
   'Non-serializable values were found in the navigation state',
+  'Require cycle:',
 ]);
 
 // Add console logging for debugging
+console.log('App.tsx: Component loading...');
 logger.log('App.tsx: Component loading...');
-
-// Initialize production-specific settings
-// Do not disable console logging in production as it prevents debugging
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
-    logger.log('App.tsx: Starting app initialization');
+    console.log('App.tsx: Starting app initialization');
     
-    // Add a small delay to ensure all modules are loaded
-    const initializeApp = async () => {
+    // Simplified initialization for production stability
+    const initializeApp = () => {
       try {
-        // Give the app time to properly initialize
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Set ready immediately in production to prevent white screen
+        if (!__DEV__) {
+          console.log('App.tsx: Production mode - skipping complex initialization');
+          setIsReady(true);
+          return;
+        }
         
-        logger.log('App.tsx: App initialization successful');
-        setIsReady(true);
+        // Only do complex initialization in development
+        setTimeout(() => {
+          console.log('App.tsx: App initialization successful');
+          setIsReady(true);
+        }, 100);
+        
       } catch (error) {
-        logger.error('App.tsx: Initialization error:', error);
+        console.error('App.tsx: Initialization error:', error);
         setInitError(error?.toString() || 'Unknown initialization error');
+        
+        // Always set ready to prevent white screen
+        setIsReady(true);
       }
     };
 
     initializeApp();
+    
+    // Emergency fallback to prevent white screen
+    const emergencyTimeout = setTimeout(() => {
+      console.log('App.tsx: Emergency timeout - forcing app to load');
+      setIsReady(true);
+    }, 3000);
+
+    return () => clearTimeout(emergencyTimeout);
   }, []);
 
-  if (initError) {
+  // Always render the app, even with errors
+  if (initError && __DEV__) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorTitle}>App Initialization Error</Text>
@@ -61,10 +81,10 @@ export default function App() {
     );
   }
 
-  logger.log('App.tsx: Rendering App component');
+  console.log('App.tsx: Rendering main app component');
   
-  try {
-    return (
+  return (
+    <SafeAreaProvider>
       <ErrorBoundary>
         <AuthProvider>
           <CartProvider>
@@ -72,16 +92,8 @@ export default function App() {
           </CartProvider>
         </AuthProvider>
       </ErrorBoundary>
-    );
-  } catch (error) {
-    logger.error('App.tsx: Error in App component:', error);
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>App Render Error</Text>
-        <Text style={styles.errorText}>{error?.toString() || 'Unknown error'}</Text>
-      </View>
-    );
-  }
+    </SafeAreaProvider>
+  );
 }
 
 const styles = StyleSheet.create({

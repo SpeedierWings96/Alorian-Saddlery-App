@@ -15,10 +15,6 @@ export default {
     assetBundlePatterns: [
       "**/*"
     ],
-    packagerOpts: {
-      config: "metro.config.js",
-      sourceExts: ["ts", "tsx", "js", "jsx", "json"]
-    },
     updates: {
       fallbackToCacheTimeout: 0
     },
@@ -29,10 +25,6 @@ export default {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: []
-      },
-      // Ensure bundle is embedded
-      config: {
-        usesNonExemptEncryption: false
       }
     },
     android: {
@@ -56,6 +48,7 @@ export default {
       "ios",
       "android"
     ],
-    jsEngine: "hermes"
+    jsEngine: "hermes",
+    sdkVersion: "53.0.0"
   }
-}; 
+};
