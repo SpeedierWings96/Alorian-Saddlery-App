@@ -19,10 +19,4 @@ config.transformer = {
   },
 };
 
-// Ensure bundle is created properly
-config.serializer = {
-  ...config.serializer,
-  getPolyfills: () => require('react-native/Libraries/polyfills/polyfills.js'),
-};
-
 module.exports = config; 
