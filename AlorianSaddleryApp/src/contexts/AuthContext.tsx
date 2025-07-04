@@ -12,57 +12,42 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isGuest, setIsGuest] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(true); // Default to guest mode to prevent white screen
+  const [isLoading, setIsLoading] = useState(false); // Start with false to prevent infinite loading
 
   useEffect(() => {
     initializeAuth();
   }, []);
 
   const initializeAuth = async () => {
+    // Don't set loading to true in production to prevent white screen
+    if (__DEV__) {
+      setIsLoading(true);
+    }
+
     try {
-      console.log('AuthContext: Starting simplified auth initialization...');
+      // Simple initialization without complex timeouts
+      await authService.initialize();
       
-      // In production, set a very short timeout to prevent white screen
-      const timeout = __DEV__ ? 3000 : 1000;
+      // Try to get stored data
+      const storedCustomer = authService.getCustomer();
+      const storedToken = authService.getAccessToken();
       
-      const initPromise = authService.initialize();
-      const timeoutPromise = new Promise<void>((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), timeout)
-      );
-      
-      try {
-        await Promise.race([initPromise, timeoutPromise]);
-        
-        // Only try to get stored data if initialization succeeded
-        const storedCustomer = authService.getCustomer();
-        const storedToken = authService.getAccessToken();
-        
-        if (storedCustomer && storedToken) {
-          console.log('AuthContext: Found stored user session');
-          setCustomer(storedCustomer);
-          setAccessToken(storedToken);
-          setIsGuest(false);
-        } else {
-          console.log('AuthContext: No stored session, using guest mode');
-          setIsGuest(false); // Don't force guest mode, let user choose
-        }
-      } catch (timeoutError) {
-        console.log('AuthContext: Initialization timeout, proceeding without auth data');
-        // Don't throw, just proceed with empty state
+      if (storedCustomer && storedToken) {
+        setCustomer(storedCustomer);
+        setAccessToken(storedToken);
+        setIsGuest(false);
       }
+      // If no stored data, stay in guest mode (already set as default)
       
-      console.log('AuthContext: Auth initialization completed');
     } catch (error) {
-      console.error('AuthContext: Auth initialization error:', error);
-      // Always reset to clean state on any error
+      // On any error, just stay in guest mode
+      console.error('AuthContext: Error during initialization, staying in guest mode:', error);
       setCustomer(null);
       setAccessToken(null);
-      setIsGuest(false);
+      setIsGuest(true);
     } finally {
-      // Always set loading to false to prevent infinite loading
       setIsLoading(false);
-      console.log('AuthContext: Auth loading state set to false');
     }
   };
 

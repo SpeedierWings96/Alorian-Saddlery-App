@@ -235,37 +235,12 @@ function MainNavigator() {
 export default function AppNavigator() {
   const { customer, isGuest, isLoading } = useAuth();
 
-  // Add aggressive fallback for production builds - never stay in loading state forever
-  const [fallbackLoading, setFallbackLoading] = React.useState(true);
-  
-  React.useEffect(() => {
-    // Much shorter timeout in production to prevent white screen
-    const timeout = __DEV__ ? 5000 : 2000;
-    
-    const fallbackTimeout = setTimeout(() => {
-      console.log('AppNavigator: Fallback timeout reached after', timeout, 'ms, forcing loading to false');
-      setFallbackLoading(false);
-    }, timeout);
-
-    if (!isLoading) {
-      console.log('AppNavigator: Auth loading completed, clearing fallback timeout');
-      clearTimeout(fallbackTimeout);
-      setFallbackLoading(false);
-    }
-
-    return () => {
-      clearTimeout(fallbackTimeout);
-    };
-  }, [isLoading]);
-
-  // Show loading screen only if both auth and fallback are loading
-  if (isLoading && fallbackLoading) {
-    console.log('AppNavigator: Showing loading screen...');
+  // Simple loading check - only show loading in development
+  if (isLoading && __DEV__) {
     return <LoadingScreen />;
   }
 
-  console.log('AppNavigator: Rendering main app, isLoading:', isLoading, 'customer:', !!customer, 'isGuest:', isGuest);
-
+  // In production, always render immediately to prevent white screen
   return (
     <NavigationContainer>
       <StatusBar style="light" backgroundColor={COLORS.primary} />

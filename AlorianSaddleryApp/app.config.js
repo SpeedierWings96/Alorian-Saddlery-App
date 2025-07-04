@@ -1,3 +1,5 @@
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 export default {
   expo: {
     name: "Alorian Saddlery",
@@ -24,7 +26,11 @@ export default {
       buildNumber: "1",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        UIBackgroundModes: []
+        UIBackgroundModes: [],
+        // Prevent packager connection attempts in production
+        RCTDevLoadingViewGetHost: IS_PRODUCTION ? "" : undefined,
+        // Disable Metro bundler checks in production
+        RCTBundleURLProviderEnablePackagerCheck: IS_PRODUCTION ? false : undefined
       }
     },
     android: {
@@ -42,8 +48,12 @@ export default {
     extra: {
       eas: {
         projectId: "132f29df-ef92-427c-b244-6a7ab3c4d48a"
-      }
+      },
+      // Disable packager checks in production
+      packagerTimeout: IS_PRODUCTION ? 0 : 5000,
+      enablePackagerCheck: !IS_PRODUCTION
     },
+    plugins: IS_PRODUCTION ? [] : undefined,
     platforms: [
       "ios",
       "android"
