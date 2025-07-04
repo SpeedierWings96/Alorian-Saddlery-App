@@ -33,9 +33,6 @@
       },
       "cache": {
         "disabled": false
-      },
-      "ios": {
-        "bundler": "metro"
       }
     },
     "local": {
