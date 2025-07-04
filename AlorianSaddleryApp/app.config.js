@@ -1,0 +1,63 @@
+export default {
+  expo: {
+    name: "Alorian Saddlery",
+    slug: "alorian-saddlery",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/icon.png",
+    userInterfaceStyle: "light",
+    newArchEnabled: true,
+    splash: {
+      image: "./assets/splash-icon.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
+    assetBundlePatterns: [
+      "**/*"
+    ],
+    packagerOpts: {
+      config: "metro.config.js",
+      sourceExts: ["ts", "tsx", "js", "jsx", "json"]
+    },
+    updates: {
+      fallbackToCacheTimeout: 0
+    },
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "com.aloriansaddlery.app",
+      buildNumber: "1",
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+        UIBackgroundModes: []
+      },
+      // Ensure bundle is embedded
+      config: {
+        usesNonExemptEncryption: false
+      }
+    },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#ffffff"
+      },
+      edgeToEdgeEnabled: true,
+      package: "com.aloriansaddlery.app",
+      versionCode: 1
+    },
+    web: {
+      favicon: "./assets/favicon.png"
+    },
+    extra: {
+      eas: {
+        projectId: "132f29df-ef92-427c-b244-6a7ab3c4d48a"
+      }
+    },
+    platforms: [
+      "ios",
+      "android"
+    ],
+    jsEngine: "hermes",
+    // Critical: Ensure entry point is correct
+    entryPoint: "./index.ts"
+  }
+}; 

@@ -9,6 +9,9 @@
       "distribution": "internal",
       "env": {
         "NODE_ENV": "development"
+      },
+      "ios": {
+        "buildConfiguration": "Debug"
       }
     },
     "preview": {
@@ -25,10 +28,14 @@
       "developmentClient": false,
       "env": {
         "NODE_ENV": "production",
-        "EXPO_NO_DEV_CLIENT": "true"
+        "EXPO_NO_DEV_CLIENT": "true",
+        "EXPO_SKIP_SOURCEMAP_UPLOAD": "true"
       },
       "cache": {
         "disabled": false
+      },
+      "ios": {
+        "bundler": "metro"
       }
     },
     "local": {
