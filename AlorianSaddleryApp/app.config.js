@@ -56,8 +56,6 @@ export default {
       "ios",
       "android"
     ],
-    jsEngine: "hermes",
-    // Critical: Ensure entry point is correct
-    entryPoint: "./index.ts"
+    jsEngine: "hermes"
   }
 }; 
