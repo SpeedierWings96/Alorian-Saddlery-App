@@ -4,6 +4,7 @@ import { COLORS, TYPOGRAPHY, SPACING } from '../config/theme';
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -33,6 +34,11 @@ class ErrorBoundary extends Component<Props, State> {
 
   render(): ReactNode {
     if (this.state.hasError) {
+      // If a fallback is provided, use it; otherwise use the default error UI
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
       return (
         <View style={styles.container}>
           <View style={styles.errorContainer}>
@@ -134,4 +140,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ErrorBoundary; 
+export default ErrorBoundary;

@@ -235,16 +235,20 @@ function MainNavigator() {
 export default function AppNavigator() {
   const { customer, isGuest, isLoading } = useAuth();
 
-  // Simple loading check - only show loading in development
+  // Never show loading screen in production to prevent white screen
+  // Always render navigation immediately
   if (isLoading && __DEV__) {
     return <LoadingScreen />;
   }
 
-  // In production, always render immediately to prevent white screen
+  // Ensure we always render something to prevent white screen
+  // Default to guest mode if no clear auth state
+  const shouldShowAuth = !customer && !isGuest;
+  
   return (
     <NavigationContainer>
       <StatusBar style="light" backgroundColor={COLORS.primary} />
-      {customer || isGuest ? <MainNavigator /> : <AuthNavigator />}
+      {shouldShowAuth ? <AuthNavigator /> : <MainNavigator />}
     </NavigationContainer>
   );
 }

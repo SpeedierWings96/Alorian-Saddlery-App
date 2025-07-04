@@ -29,9 +29,7 @@ class AuthService {
   // Initialize auth state from storage
   async initialize(): Promise<void> {
     try {
-      logger.log('AuthService: Starting initialization...');
-      
-      // Load stored data synchronously without network calls
+      // Simple, fast initialization without complex logging
       const storedToken = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
       const storedCustomer = await AsyncStorage.getItem(CUSTOMER_KEY);
       
@@ -39,18 +37,14 @@ class AuthService {
         this.accessToken = storedToken;
         try {
           this.customer = JSON.parse(storedCustomer);
-          logger.log('AuthService: Restored user session from storage');
         } catch (parseError) {
-          logger.error('AuthService: Error parsing stored customer data', parseError);
+          // Silent failure - just clear data and continue
           await this.clearAuthData();
           return;
         }
       }
-      
-      logger.log('AuthService: Initialization completed successfully');
     } catch (error) {
-      logger.error('AuthService: Error initializing auth:', error);
-      // Force clear memory state to prevent white screen
+      // Silent failure - clear state and continue
       this.accessToken = null;
       this.customer = null;
     }

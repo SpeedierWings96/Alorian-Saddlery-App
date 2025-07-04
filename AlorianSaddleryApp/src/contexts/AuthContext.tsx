@@ -13,23 +13,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(true); // Default to guest mode to prevent white screen
-  const [isLoading, setIsLoading] = useState(false); // Start with false to prevent infinite loading
+  const [isLoading, setIsLoading] = useState(false); // Always start with false in production
 
   useEffect(() => {
+    // Initialize auth state asynchronously without blocking UI
     initializeAuth();
   }, []);
 
   const initializeAuth = async () => {
-    // Don't set loading to true in production to prevent white screen
-    if (__DEV__) {
-      setIsLoading(true);
-    }
-
     try {
-      // Simple initialization without complex timeouts
+      // In production, never show loading state during initialization
+      // This prevents white screens
+      if (__DEV__) {
+        setIsLoading(true);
+      }
+
+      // Initialize auth service in background
       await authService.initialize();
       
-      // Try to get stored data
+      // Synchronously get any stored data
       const storedCustomer = authService.getCustomer();
       const storedToken = authService.getAccessToken();
       
@@ -41,13 +43,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // If no stored data, stay in guest mode (already set as default)
       
     } catch (error) {
-      // On any error, just stay in guest mode
-      console.error('AuthContext: Error during initialization, staying in guest mode:', error);
+      // On any error, silently stay in guest mode
+      // Don't log errors in production to prevent console issues
+      if (__DEV__) {
+        console.error('AuthContext: Error during initialization, staying in guest mode:', error);
+      }
       setCustomer(null);
       setAccessToken(null);
       setIsGuest(true);
     } finally {
-      setIsLoading(false);
+      if (__DEV__) {
+        setIsLoading(false);
+      }
     }
   };
 
