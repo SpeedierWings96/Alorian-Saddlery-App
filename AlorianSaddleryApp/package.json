@@ -1,0 +1,54 @@
+{
+  "name": "aloriansaddleryapp",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "build:android": "eas build --platform android",
+    "build:ios": "eas build --platform ios",
+    "build:all": "eas build --platform all",
+    "build:android:local": "eas build --platform android --local",
+    "build:ios:local": "eas build --platform ios --local",
+    "build:android:preview": "eas build --platform android --profile preview",
+    "build:android:local:preview": "eas build --platform android --profile preview --local",
+    "prebuild": "expo prebuild",
+    "clear": "expo prebuild --clear",
+    "submit:android": "eas submit --platform android",
+    "submit:ios": "eas submit --platform ios",
+    "submit:all": "eas submit --platform all"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-navigation/bottom-tabs": "^7.4.2",
+    "@react-navigation/native": "^7.1.14",
+    "@react-navigation/stack": "^7.4.2",
+    "@shopify/storefront-api-client": "^1.0.8",
+    "expo": "53.0.17",
+    "expo-image": "~2.3.2",
+    "expo-linear-gradient": "~14.1.5",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "^4.11.1",
+    "react-native-webview": "13.13.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "babel-preset-expo": "^13.2.3",
+    "expo-dev-client": "^5.2.4",
+    "typescript": "~5.8.3"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
+    }
+  },
+  "private": true
+}

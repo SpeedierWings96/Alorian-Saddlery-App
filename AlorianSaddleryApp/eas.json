@@ -1,0 +1,53 @@
+{
+  "cli": {
+    "version": ">= 7.8.6",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "developmentClient": false,
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_NO_DEV_CLIENT": "true"
+      },
+      "cache": {
+        "disabled": false
+      }
+    },
+    "local": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "gradleCommand": ":app:assembleDebug",
+        "withoutCredentials": true
+      },
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Debug"
+      },
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
