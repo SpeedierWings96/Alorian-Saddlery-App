@@ -7,9 +7,17 @@ export const SHOPIFY_CONFIG = {
   apiVersion: '2025-01',
 };
 
+// Log configuration for debugging
+console.log('Shopify Config:', {
+  storeDomain: SHOPIFY_CONFIG.storeDomain,
+  hasToken: !!SHOPIFY_CONFIG.storefrontAccessToken,
+  tokenLength: SHOPIFY_CONFIG.storefrontAccessToken.length,
+  apiVersion: SHOPIFY_CONFIG.apiVersion,
+});
+
 // Create Shopify Storefront API Client
 export const shopifyClient = createStorefrontApiClient({
-  storeDomain: `https://${SHOPIFY_CONFIG.storeDomain}`,
+  storeDomain: SHOPIFY_CONFIG.storeDomain,
   apiVersion: SHOPIFY_CONFIG.apiVersion,
   publicAccessToken: SHOPIFY_CONFIG.storefrontAccessToken,
 });
@@ -136,6 +144,46 @@ export const PRODUCT_BY_HANDLE_QUERY = `
       tags
       productType
       vendor
+    }
+  }
+`;
+
+export const PRODUCTS_BY_COLLECTION_QUERY = `
+  query getProductsByCollection($id: ID!, $first: Int!) {
+    node(id: $id) {
+      ... on Collection {
+        products(first: $first) {
+          edges {
+            node {
+              id
+              title
+              handle
+              description
+              priceRange {
+                minVariantPrice {
+                  amount
+                  currencyCode
+                }
+              }
+              images(first: 5) {
+                edges {
+                  node {
+                    id
+                    url
+                    altText
+                  }
+                }
+              }
+              vendor
+              tags
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
     }
   }
 `;

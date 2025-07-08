@@ -1,4 +1,4 @@
-import { shopifyClient, PRODUCTS_QUERY, PRODUCT_BY_HANDLE_QUERY, COLLECTIONS_QUERY, CART_CREATE_MUTATION, CART_LINES_ADD_MUTATION, CART_LINES_UPDATE_MUTATION, CART_LINES_REMOVE_MUTATION, CART_QUERY } from '../config/shopify';
+import { shopifyClient, PRODUCTS_QUERY, PRODUCT_BY_HANDLE_QUERY, PRODUCTS_BY_COLLECTION_QUERY, COLLECTIONS_QUERY, CART_CREATE_MUTATION, CART_LINES_ADD_MUTATION, CART_LINES_UPDATE_MUTATION, CART_LINES_REMOVE_MUTATION, CART_QUERY, SHOPIFY_CONFIG } from '../config/shopify';
 import {
   ProductsResponse,
   ProductByHandleResponse,
@@ -8,6 +8,7 @@ import {
   CartLinesUpdateResponse,
   CartLinesRemoveResponse,
   CartResponse,
+  ProductsByCollectionResponse,
   Product,
   Collection,
   Cart,
@@ -15,177 +16,111 @@ import {
   CartLineInput,
   CartLineUpdateInput,
 } from '../types/shopify';
+import { retryWithBackoff, testNetworkConnectivity, testShopifyConnectivity } from './networkUtils';
 
 class ShopifyApiService {
-  /**
-   * Get mock products for development/fallback
-   */
-  private getMockProducts(): ProductsResponse {
-    return {
-      products: {
-        edges: [
-          {
-            node: {
-              id: 'mock-product-1',
-              title: 'Premium English Saddle',
-              handle: 'premium-english-saddle',
-              description: 'High-quality English saddle made from premium leather.',
-              priceRange: {
-                minVariantPrice: { amount: '899.99', currencyCode: 'USD' },
-                maxVariantPrice: { amount: '899.99', currencyCode: 'USD' }
-              },
-              images: {
-                edges: [{
-                  node: {
-                    id: 'mock-image-1',
-                    url: 'https://via.placeholder.com/400x400/1B2951/FFFFFF?text=Saddle',
-                    altText: 'Premium English Saddle'
-                  }
-                }]
-              },
-              variants: {
-                edges: [{
-                  node: {
-                    id: 'mock-variant-1',
-                    title: 'Brown Leather - 17"',
-                    price: { amount: '899.99', currencyCode: 'USD' },
-                    availableForSale: true,
-                    selectedOptions: [
-                      { name: 'Color', value: 'Brown' },
-                      { name: 'Size', value: '17"' }
-                    ]
-                  }
-                }]
-              },
-              options: [
-                { id: 'option-1', name: 'Color', values: ['Brown', 'Black'] },
-                { id: 'option-2', name: 'Size', values: ['16"', '17"', '18"'] }
-              ],
-              tags: ['English', 'Premium', 'Leather'],
-              productType: 'Saddles',
-              vendor: 'Alorian Saddlery'
-            }
-          },
-          {
-            node: {
-              id: 'mock-product-2',
-              title: 'Leather Bridle Set',
-              handle: 'leather-bridle-set',
-              description: 'Complete bridle set with reins and bit.',
-              priceRange: {
-                minVariantPrice: { amount: '149.99', currencyCode: 'USD' },
-                maxVariantPrice: { amount: '149.99', currencyCode: 'USD' }
-              },
-              images: {
-                edges: [{
-                  node: {
-                    id: 'mock-image-2',
-                    url: 'https://via.placeholder.com/400x400/D4AF37/FFFFFF?text=Bridle',
-                    altText: 'Leather Bridle Set'
-                  }
-                }]
-              },
-              variants: {
-                edges: [{
-                  node: {
-                    id: 'mock-variant-2',
-                    title: 'Black - Full Size',
-                    price: { amount: '149.99', currencyCode: 'USD' },
-                    availableForSale: true,
-                    selectedOptions: [
-                      { name: 'Color', value: 'Black' },
-                      { name: 'Size', value: 'Full' }
-                    ]
-                  }
-                }]
-              },
-              options: [
-                { id: 'option-3', name: 'Color', values: ['Black', 'Brown'] },
-                { id: 'option-4', name: 'Size', values: ['Cob', 'Full', 'Oversize'] }
-              ],
-              tags: ['Bridle', 'Leather', 'Complete Set'],
-              productType: 'Bridles',
-              vendor: 'Alorian Saddlery'
-            }
-          }
-        ],
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false
-        }
-      }
-    };
-  }
 
-  /**
-   * Get mock collections for development/fallback
-   */
-  private getMockCollections(): Collection[] {
-    return [
-      {
-        id: 'mock-collection-1',
-        title: 'English Tack',
-        handle: 'english-tack',
-        description: 'Premium English riding equipment',
-        image: {
-          id: 'mock-collection-image-1',
-          url: 'https://via.placeholder.com/400x300/1B2951/FFFFFF?text=English+Tack',
-          altText: 'English Tack Collection'
-        },
-        products: {
-          edges: [
-            {
-              node: {
-                id: 'mock-product-1',
-                title: 'Premium English Saddle',
-                handle: 'premium-english-saddle',
-                description: 'High-quality English saddle',
-                priceRange: {
-                  minVariantPrice: { amount: '899.99', currencyCode: 'USD' },
-                  maxVariantPrice: { amount: '899.99', currencyCode: 'USD' }
-                },
-                images: {
-                  edges: [{
-                    node: {
-                      id: 'mock-image-1',
-                      url: 'https://via.placeholder.com/400x400/1B2951/FFFFFF?text=Saddle',
-                      altText: 'Premium English Saddle'
-                    }
-                  }]
-                },
-                variants: { edges: [] },
-                tags: ['English', 'Premium'],
-                productType: 'Saddles',
-                vendor: 'Alorian Saddlery'
-              }
-            }
-          ]
-        }
-      }
-    ];
-  }
 
   /**
    * Fetch products with pagination
    */
   async getProducts(first: number = 20, after?: string): Promise<ProductsResponse> {
     try {
+      console.log('ShopifyApi: Attempting to fetch products from Shopify API...');
+      
+      // Test network connectivity first
+      const hasNetwork = await testNetworkConnectivity();
+      if (!hasNetwork) {
+        console.error('ShopifyApi: No internet connectivity detected');
+        throw new Error('No internet connection available');
+      }
+      
+      // Test Shopify domain connectivity
+      const shopifyTest = await testShopifyConnectivity(SHOPIFY_CONFIG.storeDomain);
+      if (!shopifyTest.success) {
+        console.error('ShopifyApi: Cannot reach Shopify domain:', shopifyTest.error);
+        throw new Error(`Cannot reach Shopify store: ${shopifyTest.error}`);
+      }
+      
       const variables = { first, ...(after && { after }) };
-      const response = await shopifyClient.request(PRODUCTS_QUERY, { variables });
+      
+      // Use retry logic for the API call
+      const response = await retryWithBackoff(async () => {
+        console.log('ShopifyApi: Making GraphQL request...');
+        return await shopifyClient.request(PRODUCTS_QUERY, { variables });
+      }, 3, 2000);
+      
+      console.log('ShopifyApi: Response received:', response);
       
       if (response.errors) {
+        console.error('ShopifyApi: GraphQL errors:', response.errors);
         throw new Error(`GraphQL Error: ${JSON.stringify(response.errors)}`);
       }
       
       if (!response.data) {
+        console.error('ShopifyApi: No data returned from API');
         throw new Error('No data returned from API');
       }
       
+      console.log('ShopifyApi: Successfully fetched products:', response.data.products.edges.length);
       return response.data as ProductsResponse;
     } catch (error) {
-      console.error('Error fetching products:', error);
-      console.log('Falling back to mock data');
-      return this.getMockProducts();
+      console.error('ShopifyApi: Error fetching products:', error);
+      console.error('ShopifyApi: Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : 'Unknown'
+      });
+      
+      // Instead of falling back to mock data, return empty results
+      return {
+        products: {
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: false
+          }
+        }
+      };
+    }
+  }
+
+  /**
+   * Fetch a single product by handle
+   */
+  async getProductsByCollectionId(id: string, first: number = 20): Promise<Product[]> {
+    try {
+      console.log('ShopifyApi: Attempting to fetch products from collection:', id);
+      const variables = { id, first };
+      const response = await shopifyClient.request(PRODUCTS_BY_COLLECTION_QUERY, { variables });
+
+      if (response.errors) {
+        console.error('ShopifyApi: GraphQL errors for collection:', response.errors);
+        throw new Error(`GraphQL Error: ${JSON.stringify(response.errors)}`);
+      }
+
+      if (!response.data) {
+        console.error('ShopifyApi: No data returned from collection API');
+        throw new Error('No data returned from API');
+      }
+
+      const data = response.data as ProductsByCollectionResponse;
+
+      if (!data.node) {
+        console.warn(`ShopifyApi: Collection not found for ID: ${id}`);
+        return [];
+      }
+
+      console.log('ShopifyApi: Successfully fetched products from collection:', data.node.products.edges.length);
+      return data.node.products.edges.map((edge: { node: Product }) => edge.node);
+    } catch (error) {
+      console.error('ShopifyApi: Error fetching products by collection:', error);
+      console.error('ShopifyApi: Collection error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : 'Unknown'
+      });
+      return [];
     }
   }
 
@@ -218,23 +153,31 @@ class ShopifyApiService {
    */
   async getCollections(first: number = 20): Promise<Collection[]> {
     try {
+      console.log('ShopifyApi: Attempting to fetch collections from Shopify API...');
       const variables = { first };
       const response = await shopifyClient.request(COLLECTIONS_QUERY, { variables });
       
       if (response.errors) {
+        console.error('ShopifyApi: GraphQL errors for collections:', response.errors);
         throw new Error(`GraphQL Error: ${JSON.stringify(response.errors)}`);
       }
       
       if (!response.data) {
+        console.error('ShopifyApi: No data returned from collections API');
         throw new Error('No data returned from API');
       }
       
       const data = response.data as CollectionsResponse;
+      console.log('ShopifyApi: Successfully fetched collections:', data.collections.edges.length);
       return data.collections.edges.map(edge => edge.node);
     } catch (error) {
-      console.error('Error fetching collections:', error);
-      console.log('Falling back to mock collections');
-      return this.getMockCollections();
+      console.error('ShopifyApi: Error fetching collections:', error);
+      console.error('ShopifyApi: Collections error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : 'Unknown'
+      });
+      return [];
     }
   }
 
@@ -470,88 +413,6 @@ class ShopifyApiService {
       return data.products.edges.map(edge => edge.node);
     } catch (error) {
       console.error('Error searching products:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get products by collection ID
-   */
-  async getProductsByCollectionId(collectionId: string, first: number = 20): Promise<Product[]> {
-    try {
-      const collectionQuery = `
-        query getProductsByCollectionId($id: ID!, $first: Int!) {
-          collection(id: $id) {
-            products(first: $first) {
-              edges {
-                node {
-                  id
-                  title
-                  handle
-                  description
-                  priceRange {
-                    minVariantPrice {
-                      amount
-                      currencyCode
-                    }
-                    maxVariantPrice {
-                      amount
-                      currencyCode
-                    }
-                  }
-                  images(first: 5) {
-                    edges {
-                      node {
-                        id
-                        url
-                        altText
-                        width
-                        height
-                      }
-                    }
-                  }
-                  variants(first: 10) {
-                    edges {
-                      node {
-                        id
-                        title
-                        price {
-                          amount
-                          currencyCode
-                        }
-                        availableForSale
-                        selectedOptions {
-                          name
-                          value
-                        }
-                      }
-                    }
-                  }
-                  tags
-                  productType
-                  vendor
-                }
-              }
-            }
-          }
-        }
-      `;
-
-      const variables = { id: collectionId, first };
-      const response = await shopifyClient.request(collectionQuery, { variables });
-      
-      if (response.errors) {
-        throw new Error(`GraphQL Error: ${JSON.stringify(response.errors)}`);
-      }
-      
-      if (!response.data) {
-        throw new Error('No data returned from API');
-      }
-      
-      const data = response.data as { collection: { products: { edges: { node: Product }[] } } | null };
-      return data.collection?.products.edges.map(edge => edge.node) || [];
-    } catch (error) {
-      console.error('Error fetching products by collection ID:', error);
       throw error;
     }
   }

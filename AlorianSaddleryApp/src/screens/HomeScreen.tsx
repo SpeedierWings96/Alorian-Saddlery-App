@@ -38,21 +38,24 @@ const HomeScreen: React.FC = () => {
       console.log('HomeScreen: Fetching featured products...');
       setLoadingFeaturedProducts(true);
       
-      // Try to fetch from a specific collection, fallback to general products
-      try {
-        const productsData = await shopifyApi.getProductsByCollectionId('gid://shopify/Collection/519170851118', 10);
-        console.log('HomeScreen: Fetched products from collection:', productsData.length);
-        setFeaturedProducts(productsData.slice(0, 6));
-      } catch (collectionError) {
-        console.log('HomeScreen: Collection fetch failed, trying general products...');
-        // Fallback to general products if collection doesn't exist
-        const generalProducts = await shopifyApi.getProducts(6);
-        const products = generalProducts.products.edges.map(edge => edge.node);
-        console.log('HomeScreen: Fetched general products:', products.length);
+      // First try to fetch general products
+      console.log('HomeScreen: Attempting to fetch general products...');
+      const response = await shopifyApi.getProducts(6);
+      
+      if (response.products.edges.length > 0) {
+        const products = response.products.edges.map(edge => edge.node);
+        console.log('HomeScreen: Successfully fetched products:', products.length);
         setFeaturedProducts(products);
+      } else {
+        console.log('HomeScreen: No products found in response');
+        setFeaturedProducts([]);
       }
     } catch (error) {
       console.error('HomeScreen: Error fetching featured products:', error);
+      console.error('HomeScreen: Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Set empty array as final fallback
       setFeaturedProducts([]);
     } finally {
@@ -97,6 +100,22 @@ const HomeScreen: React.FC = () => {
             <ActivityIndicator size="large" color={COLORS.primary} />
             <Text style={styles.loadingText}>Loading featured products...</Text>
           </View>
+        ) : featuredProducts.length === 0 ? (
+          <View style={styles.loadingContainer}>
+            <Ionicons name="wifi-outline" size={40} color={COLORS.gray[400]} />
+            <Text style={styles.loadingText}>Unable to load products</Text>
+            <Text style={styles.loadingSubtext}>
+              This could be due to network connectivity issues.{'\n'}
+              Please check your internet connection and try again.
+            </Text>
+            <TouchableOpacity 
+              style={styles.retryButton}
+              onPress={fetchFeaturedProducts}
+            >
+              <Ionicons name="refresh-outline" size={20} color={COLORS.primary} />
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <FlatList
             data={featuredProducts}
@@ -105,8 +124,11 @@ const HomeScreen: React.FC = () => {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.collectionsContainer}
             renderItem={({ item }) => {
-              const productImage = item.images.edges.length > 0 ? item.images.edges[0].node : null;
-              const price = item.variants.edges.length > 0 ? item.variants.edges[0].node.price : null;
+              const productImage = item.images?.edges?.length > 0 ? item.images.edges[0].node : null;
+              const price = item.priceRange?.minVariantPrice || (item.variants?.edges?.length > 0 ? item.variants.edges[0].node.price : null);
+
+              // Debug logging
+              console.log('Product:', item.title, 'Image:', productImage?.url, 'Price:', price?.amount);
 
               return (
                 <TouchableOpacity
@@ -114,15 +136,34 @@ const HomeScreen: React.FC = () => {
                   onPress={() => navigation.navigate('ProductDetail', { productHandle: item.handle })}
                 >
                   <View style={styles.collectionImageContainer}>
-                    {productImage ? (
+                    {productImage && productImage.url && productImage.url !== 'Loading...' && productImage.url.startsWith('http') ? (
                       <Image
-                        source={{ uri: productImage.url }}
+                        source={{ 
+                          uri: productImage.url,
+                          headers: {
+                            'Accept': 'image/*',
+                            'Cache-Control': 'no-cache',
+                          }
+                        }}
                         style={styles.collectionImage}
                         resizeMode="cover"
+                        onError={(error) => {
+                          console.log('❌ Image load error for:', productImage.url, error.nativeEvent?.error || error);
+                        }}
+                        onLoad={() => {
+                          console.log('✅ Image loaded successfully:', productImage.url);
+                        }}
+                        onLoadStart={() => {
+                          console.log('🔄 Image loading started:', productImage.url);
+                        }}
+                        onLoadEnd={() => {
+                          console.log('🏁 Image loading ended:', productImage.url);
+                        }}
                       />
                     ) : (
                       <View style={styles.placeholderImage}>
                         <Ionicons name="cube-outline" size={40} color={COLORS.gray[400]} />
+                        <Text style={styles.placeholderText}>No Image</Text>
                       </View>
                     )}
                     <View style={styles.collectionOverlay} />
@@ -545,6 +586,28 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.base,
     color: COLORS.text.secondary,
   },
+  loadingSubtext: {
+    marginTop: SPACING.xs,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    color: COLORS.text.secondary,
+    textAlign: 'center',
+    opacity: 0.7,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary + '15',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderRadius: 8,
+    marginTop: SPACING.lg,
+    gap: SPACING.sm,
+  },
+  retryButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.base,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
   collectionsContainer: {
     paddingLeft: SPACING.lg,
   },
@@ -574,6 +637,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray[200],
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  placeholderText: {
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    color: COLORS.gray[500],
+    marginTop: SPACING.xs,
+    textAlign: 'center',
   },
   collectionOverlay: {
     position: 'absolute',

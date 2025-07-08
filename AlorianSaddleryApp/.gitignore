@@ -35,3 +35,10 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# iOS Bundle Files (generated locally)
+ios/main.jsbundle
+ios/assets/
+android/app/src/main/assets/index.android.bundle
+android/app/src/main/res/drawable-*
+android/app/src/main/res/raw/

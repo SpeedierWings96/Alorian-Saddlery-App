@@ -7,6 +7,10 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "ios": {
+        "image": "latest",
+        "simulator": true
+      },
       "env": {
         "NODE_ENV": "development",
         "EXPO_NO_METRO": "false"
@@ -17,6 +21,9 @@
     },
     "preview": {
       "distribution": "internal",
+      "ios": {
+        "image": "latest"
+      },
       "env": {
         "NODE_ENV": "production"
       },
@@ -27,6 +34,9 @@
     "production": {
       "autoIncrement": true,
       "developmentClient": false,
+      "ios": {
+        "image": "latest"
+      },
       "env": {
         "NODE_ENV": "production",
         "EXPO_NO_DEV_CLIENT": "true",
@@ -47,6 +57,7 @@
         "withoutCredentials": true
       },
       "ios": {
+        "image": "latest",
         "simulator": true,
         "buildConfiguration": "Debug"
       },

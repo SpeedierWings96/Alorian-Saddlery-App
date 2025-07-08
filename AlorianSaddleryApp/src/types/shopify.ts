@@ -153,6 +153,18 @@ export interface ProductByHandleResponse {
   productByHandle: Product | null;
 }
 
+export interface ProductsByCollectionResponse {
+  node: {
+    products: {
+      edges: { node: Product }[];
+      pageInfo: {
+        hasNextPage: boolean;
+        endCursor: string | null;
+      };
+    };
+  };
+}
+
 export interface CollectionsResponse {
   collections: {
     edges: {

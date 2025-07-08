@@ -1,6 +1,5 @@
 import React from 'react';
 import { LogBox, View, Text } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { AuthProvider } from './src/contexts/AuthContext';
@@ -48,22 +47,19 @@ export default function App() {
   // Wrap everything in a try-catch to prevent white screens
   try {
     return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <ErrorBoundary fallback={<FallbackComponent />}>
-            <AuthProvider>
-              <CartProvider>
-                <AppNavigator />
-              </CartProvider>
-            </AuthProvider>
-          </ErrorBoundary>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
+      <SafeAreaProvider>
+        <ErrorBoundary fallback={<FallbackComponent />}>
+          <AuthProvider>
+            <CartProvider>
+              <AppNavigator />
+              <DiagnosticScreen />
+            </CartProvider>
+          </AuthProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
     );
   } catch (error) {
     // Last resort fallback
     return <FallbackComponent />;
   }
 }
-
-
