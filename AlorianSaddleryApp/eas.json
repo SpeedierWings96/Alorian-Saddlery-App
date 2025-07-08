@@ -9,14 +9,12 @@
       "distribution": "internal",
       "ios": {
         "image": "latest",
-        "simulator": true
+        "simulator": true,
+        "buildConfiguration": "Debug"
       },
       "env": {
         "NODE_ENV": "development",
         "EXPO_NO_METRO": "false"
-      },
-      "ios": {
-        "buildConfiguration": "Debug"
       }
     },
     "preview": {
@@ -35,7 +33,8 @@
       "autoIncrement": true,
       "developmentClient": false,
       "ios": {
-        "image": "latest"
+        "image": "latest",
+        "resourceClass": "m-medium"
       },
       "env": {
         "NODE_ENV": "production",
@@ -44,9 +43,6 @@
       },
       "cache": {
         "disabled": false
-      },
-      "ios": {
-        "resourceClass": "m-medium"
       }
     },
     "local": {

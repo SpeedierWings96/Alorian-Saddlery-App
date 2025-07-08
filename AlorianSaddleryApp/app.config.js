@@ -9,6 +9,16 @@ export default {
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
     newArchEnabled: false,
+    plugins: [
+      [
+        "expo-build-properties",
+        {
+          ios: {
+            useFrameworks: "static"
+          }
+        }
+      ]
+    ],
     splash: {
       image: "./assets/splash-icon.png",
       resizeMode: "contain",
@@ -24,7 +34,7 @@ export default {
       supportsTablet: true,
       bundleIdentifier: "com.aloriansaddlery.app",
       buildNumber: "1",
-      deploymentTarget: "15.0",
+      deploymentTarget: "13.4",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: [],
