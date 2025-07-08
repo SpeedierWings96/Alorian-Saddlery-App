@@ -1,0 +1,9 @@
+#ifdef __cplusplus
+#import "custom_char_traits.h"
+#import <string>
+#import <ios>
+
+template<>
+struct std::char_traits<unsigned char> : alorian_traits::char_traits<unsigned char> {};
+
+#endif 
