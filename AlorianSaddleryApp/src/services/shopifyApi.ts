@@ -20,6 +20,56 @@ import { retryWithBackoff, testNetworkConnectivity, testShopifyConnectivity } fr
 
 class ShopifyApiService {
 
+  /**
+   * Alternative GraphQL request method using XMLHttpRequest to bypass iOS 17+ QUIC issues
+   */
+  private async makeDirectGraphQLRequest(query: string, variables: any): Promise<any> {
+    const url = `https://${SHOPIFY_CONFIG.storeDomain}/api/${SHOPIFY_CONFIG.apiVersion}/graphql.json`;
+    
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('X-Shopify-Storefront-Access-Token', SHOPIFY_CONFIG.storefrontAccessToken);
+      xhr.setRequestHeader('Accept', 'application/json');
+      
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response);
+            } catch (error) {
+              reject(new Error('Failed to parse response JSON'));
+            }
+          } else {
+            reject(new Error(`HTTP error! status: ${xhr.status}`));
+          }
+        }
+      };
+      
+      xhr.onerror = function() {
+        reject(new Error('Network error occurred'));
+      };
+      
+      xhr.ontimeout = function() {
+        reject(new Error('Request timeout'));
+      };
+      
+      xhr.timeout = 15000; // 15 second timeout
+      
+      try {
+        const body = JSON.stringify({
+          query,
+          variables
+        });
+        xhr.send(body);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 
   /**
    * Fetch products with pagination
@@ -44,11 +94,11 @@ class ShopifyApiService {
       
       const variables = { first, ...(after && { after }) };
       
-      // Use retry logic for the API call
+      // Use retry logic with XMLHttpRequest to bypass iOS 17+ QUIC issues
       const response = await retryWithBackoff(async () => {
-        console.log('ShopifyApi: Making GraphQL request...');
-        return await shopifyClient.request(PRODUCTS_QUERY, { variables });
-      }, 3, 2000);
+        console.log('ShopifyApi: Making XMLHttpRequest...');
+        return await this.makeDirectGraphQLRequest(PRODUCTS_QUERY, variables);
+      }, 8, 500); // More aggressive retries for iOS 17+ network issues
       
       console.log('ShopifyApi: Response received:', response);
       
@@ -92,7 +142,10 @@ class ShopifyApiService {
     try {
       console.log('ShopifyApi: Attempting to fetch products from collection:', id);
       const variables = { id, first };
-      const response = await shopifyClient.request(PRODUCTS_BY_COLLECTION_QUERY, { variables });
+      const response = await retryWithBackoff(async () => {
+        console.log('ShopifyApi: Making XMLHttpRequest for collection...');
+        return await this.makeDirectGraphQLRequest(PRODUCTS_BY_COLLECTION_QUERY, variables);
+      }, 8, 500);
 
       if (response.errors) {
         console.error('ShopifyApi: GraphQL errors for collection:', response.errors);

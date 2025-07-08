@@ -35,16 +35,29 @@ const HomeScreen: React.FC = () => {
 
   const fetchFeaturedProducts = async () => {
     try {
-      console.log('HomeScreen: Fetching featured products...');
+      console.log('HomeScreen: Fetching featured products from collection...');
       setLoadingFeaturedProducts(true);
       
-      // First try to fetch general products
+      // Try featured collection first, fallback to general products
+      console.log('HomeScreen: Attempting to fetch from collection 519170851118...');
+      try {
+        const products = await shopifyApi.getProductsByCollectionId('gid://shopify/Collection/519170851118', 6);
+        if (products.length > 0) {
+          console.log('HomeScreen: Successfully fetched featured products from collection:', products.length);
+          setFeaturedProducts(products);
+          return;
+        }
+      } catch (collectionError) {
+        console.warn('HomeScreen: Failed to fetch from collection, trying general products:', collectionError);
+      }
+      
+      // Fallback to general products
       console.log('HomeScreen: Attempting to fetch general products...');
       const response = await shopifyApi.getProducts(6);
       
       if (response.products.edges.length > 0) {
         const products = response.products.edges.map(edge => edge.node);
-        console.log('HomeScreen: Successfully fetched products:', products.length);
+        console.log('HomeScreen: Successfully fetched general products:', products.length);
         setFeaturedProducts(products);
       } else {
         console.log('HomeScreen: No products found in response');
@@ -149,6 +162,10 @@ const HomeScreen: React.FC = () => {
                         resizeMode="cover"
                         onError={(error) => {
                           console.log('❌ Image load error for:', productImage.url, error.nativeEvent?.error || error);
+                          // Don't log -1017 errors as critical since they're expected with QUIC issues
+                          if (error.nativeEvent?.error?.includes('-1017')) {
+                            console.log('ℹ️ Image failed with -1017 QUIC error, showing placeholder');
+                          }
                         }}
                         onLoad={() => {
                           console.log('✅ Image loaded successfully:', productImage.url);
@@ -162,8 +179,7 @@ const HomeScreen: React.FC = () => {
                       />
                     ) : (
                       <View style={styles.placeholderImage}>
-                        <Ionicons name="cube-outline" size={40} color={COLORS.gray[400]} />
-                        <Text style={styles.placeholderText}>No Image</Text>
+                        <Ionicons name="image-outline" size={40} color={COLORS.gray[400]} />
                       </View>
                     )}
                     <View style={styles.collectionOverlay} />
