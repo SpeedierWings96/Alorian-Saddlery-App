@@ -37,9 +37,7 @@ export default {
       deploymentTarget: "13.4",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        UIBackgroundModes: [],
-        RCTDevLoadingViewGetHost: IS_PRODUCTION ? "" : undefined,
-        RCTBundleURLProviderEnablePackagerCheck: IS_PRODUCTION ? false : undefined
+        UIBackgroundModes: []
       }
     },
     android: {
@@ -57,15 +55,13 @@ export default {
     extra: {
       eas: {
         projectId: "132f29df-ef92-427c-b244-6a7ab3c4d48a"
-      },
-      packagerTimeout: IS_PRODUCTION ? 0 : 5000,
-      enablePackagerCheck: !IS_PRODUCTION
+      }
     },
     platforms: [
       "ios",
       "android"
     ],
     jsEngine: "hermes",
-    sdkVersion: "51.0.0"
+    scheme: "alorian-saddlery"
   }
 };

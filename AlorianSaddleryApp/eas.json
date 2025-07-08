@@ -37,28 +37,25 @@
         "resourceClass": "m-medium"
       },
       "env": {
-        "NODE_ENV": "production",
-        "EXPO_NO_DEV_CLIENT": "true",
-        "EXPO_SKIP_SOURCEMAP_UPLOAD": "true"
+        "NODE_ENV": "production"
       },
       "cache": {
         "disabled": false
       }
     },
     "local": {
-      "developmentClient": true,
+      "developmentClient": false,
       "distribution": "internal",
       "android": {
         "gradleCommand": ":app:assembleDebug",
         "withoutCredentials": true
       },
       "ios": {
-        "image": "latest",
-        "simulator": true,
-        "buildConfiguration": "Debug"
+        "simulator": false,
+        "buildConfiguration": "Release"
       },
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "production"
       }
     }
   },
