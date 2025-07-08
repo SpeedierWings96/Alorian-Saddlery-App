@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.aloriansaddlery.app</string>
+          <string>alorian-saddlery</string>
         </array>
       </dict>
     </array>
